@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\User;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Validator;
+use App\User;
 use Illuminate\Foundation\Auth\RegistersUsers;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class RegisterController extends Controller
 {
@@ -50,7 +51,6 @@ class RegisterController extends Controller
         return Validator::make($data, [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6|confirmed',
         ]);
     }
 
@@ -64,8 +64,15 @@ class RegisterController extends Controller
     {
         return User::create([
             'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => bcrypt($data['password']),
+            'email' => $data['email'],           
         ]);
+    }
+
+    //sobreescribimos el sgte metodo
+    protected function registered(Request $request, $user)
+    {
+        $this->guard()->logout();
+
+        return redirect('login')->withSuccess('Tu cuenta ha sido creada, por favor inicia sesión');
     }
 }
