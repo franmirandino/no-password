@@ -26,4 +26,21 @@ class User extends Authenticatable
     protected $hidden = [
         'password', 'remember_token',
     ];
+
+    public function generateLoginToken()
+    {
+        $this->update(['login_token' => str_random(60)]);
+    }
+
+    public function deleteTokenLogin()
+    {
+        $this->update(['login_token' => null]);
+    }
+
+    public function scopeByEmail($builder, $email)
+    {
+
+        return $builder->where('email', $email)->firstOrFail();
+
+    }
 }

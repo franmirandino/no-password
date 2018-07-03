@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\User;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use App\Mail\LoginTokenEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Hash;
 
 class LoginController extends Controller
@@ -50,24 +52,26 @@ class LoginController extends Controller
             'email' => 'required|string|email|exists:users'
         ]);
 
-        $user = User::where('email', $request->email)->first();
-
-        $user->update(['login_token' => str_random(60)]);
+        $user = User::byEmail($request->email);
+        
+        $user->generateLoginToken();
 
         //enviar el correo con el link del login
+
+        Mail::to($user)->queue(new LoginTokenEmail($user));
 
         return back()->withSuccess('Te hemos enviado un email con el link para el login');
     }
 
     public function loginWithToken(Request $request)
     {
-        $user = User::where('email', $request->email)->firstOrFail();
+        $user = User::byEmail($request->email);
 
         if(Hash::check($user->login_token, $request->token))
         {
             Auth::login($user);
 
-            $user->update(['login_token' => null]);
+            $user->deleteTokenLogin();            
 
             return redirect('home')->withSuccess('Has iniciado sesión correctamente');
         }

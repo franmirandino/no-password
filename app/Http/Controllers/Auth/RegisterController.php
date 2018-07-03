@@ -7,6 +7,9 @@ use App\User;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\LoginTokenEmail;
+
 
 class RegisterController extends Controller
 {
@@ -72,6 +75,8 @@ class RegisterController extends Controller
     protected function registered(Request $request, $user)
     {
         $this->guard()->logout();
+
+        Mail::to($user)->queue(new LoginTokenEmail($user));
 
         return redirect('login')->withSuccess('Tu cuenta ha sido creada, por favor inicia sesión');
     }
